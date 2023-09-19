@@ -58,7 +58,9 @@ endif()
 target_include_directories(playdate_sdk PUBLIC ${SDK}/C_API)
 
 # now we can build the core PDCPP Core library
-add_library(pdcpp_core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pdnewlib.c ${CMAKE_CURRENT_SOURCE_DIR}/src/pdnewdelete.cpp)
+add_library(pdcpp_core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/pdnewlib.c ${CMAKE_CURRENT_SOURCE_DIR}/src/pdnewdelete.cpp
+        ../../KlangwellenApp.h
+        ../../AudioState.h)
 target_include_directories(pdcpp_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 target_link_libraries(pdcpp_core playdate_sdk)
 
