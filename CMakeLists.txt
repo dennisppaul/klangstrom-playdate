@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.19)
 project("klangstrom-playdate")
 set(KLANGWELLEN_PATH "../klangstrom/klangwellen/")
 
+if(NOT DEFINED ENV{PLAYDATE_SDK_PATH})
+    message("PLAYDATE_SDK_PATH is not set or is empty ...")
+    set(ENV{PLAYDATE_SDK_PATH} "$ENV{HOME}/Developer/PlaydateSDK")
+    message("... setting it to $ENV{PLAYDATE_SDK_PAT}")
+endif()
+
 # C++ 20 and up is required in order to include the playdate headers
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
