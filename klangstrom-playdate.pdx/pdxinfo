@@ -3,5 +3,5 @@ author=Dennis P Paul
 description=Klangstrom on Playdate
 bundleID=de.dennisppaul.klangstrom-playdate
 imagePath=
-pdxversion=20000
-buildtime=749219577
+pdxversion=20100
+buildtime=757150135
