@@ -10,7 +10,7 @@
 
 std::unique_ptr<KlangwellenApp> fApp;
 
-static int update(void *userdata) {
+int update(void *userdata) {
     fApp->update();
     return 1;
 };
@@ -30,7 +30,7 @@ extern "C" {
 void setup_audio(PlaydateAPI *pd) {
     // create a new audio source with a state context
     auto *state = (AudioState *) pd->system->realloc(nullptr, sizeof(AudioState));
-    state->pd = pd;
+    state->pd     = pd;
     state->source = pd->sound->addSource(&update_audio, state, 1);
 }
 
@@ -42,7 +42,7 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     eventHandler_pdnewlib(pd, event, arg);
 
     if (event == kEventInit) {
-        pd->system->logToConsole("init");
+//        pd->system->logToConsole("init");
         pd->display->setRefreshRate(20);
         fApp = std::make_unique<KlangwellenApp>(pd);
 
@@ -54,16 +54,16 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
 
     if (event == kEventKeyPressed) {
         fApp->keyPressed(arg);
-        pd->system->logToConsole("key pressed : %i", arg);
+//        pd->system->logToConsole("key pressed : %i", arg);
     }
 
     if (event == kEventKeyReleased) {
         fApp->keyReleased(arg);
-        pd->system->logToConsole("key released: %i", arg);
+//        pd->system->logToConsole("key released: %i", arg);
     }
 
     if (event == kEventTerminate) {
-        pd->system->logToConsole("shutting down...");
+//        pd->system->logToConsole("shutting down...");
         fApp = nullptr;
     }
     return 0;

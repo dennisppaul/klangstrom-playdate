@@ -11,6 +11,7 @@ endif()
 # C++ 20 and up is required in order to include the playdate headers
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion")
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
 
