@@ -8,7 +8,9 @@
 
 // from https://github.com/nstbayless/playdate-cpp
 
-std::unique_ptr<KlangwellenApp> fApp;
+extern KlangwellenApp *get_instance(PlaydateAPI *pd);
+
+KlangwellenApp *fApp;
 
 int update(void *userdata) {
     fApp->update();
@@ -44,7 +46,8 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     if (event == kEventInit) {
 //        pd->system->logToConsole("init");
         pd->display->setRefreshRate(20);
-        fApp = std::make_unique<KlangwellenApp>(pd);
+        fApp = get_instance(pd);//std::make_unique<KlangwellenApp>(pd);
+        fApp->setup();
 
         /* setup callback, turn off lua */
         pd->system->setUpdateCallback(update, pd);

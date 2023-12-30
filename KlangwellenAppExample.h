@@ -1,5 +1,10 @@
 #pragma once
 
+#include <memory>
+#include <string>
+#include <pd_api.h>
+#include <pdcpp/pdnewlib.h>
+
 #include <pd_api.h>
 
 #include "KlangWellen.h"
@@ -10,23 +15,28 @@
 
 using namespace klangwellen;
 
-constexpr int TEXT_WIDTH  = 86;
-constexpr int TEXT_HEIGHT = 16;
-
-class KlangwellenApp {
+class KlangwellenAppExample : public KlangwellenApp {
 public:
-    explicit KlangwellenApp(PlaydateAPI *api)
-            : pd(api), fontpath("/System/Fonts/Roobert-10-Bold.pft"), x((400 - TEXT_WIDTH) / 2),
-              y((240 - TEXT_HEIGHT) / 2), dx(1), dy(2) {
+    int TEXT_WIDTH  = 86;
+    int TEXT_HEIGHT = 16;
+
+    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenApp(api) {}
+
+    void setup() {
         const char *err;
-        font = pd->graphics->loadFont(fontpath.c_str(), &err);
+        fontpath = "/System/Fonts/Roobert-10-Bold.pft";
+        font     = pd->graphics->loadFont(fontpath.c_str(), &err);
+        if (font == nullptr) {
+            pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath.c_str(), err);
+        }
 
         const char *path1 = "images/neven-patterns.png";
         flake = pd->graphics->loadBitmap(path1, &err);
 
-        if (font == nullptr) {
-            pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath.c_str(), err);
-        }
+        x  = ((400 - TEXT_WIDTH) / 2);
+        y  = ((240 - TEXT_HEIGHT) / 2);
+        dx = (1);
+        dy = (2);
 
         fWavetable.set_waveform(klangwellen::KlangWellen::WAVEFORM_SAWTOOTH, 16);
         fWavetable.set_frequency(55);
@@ -40,6 +50,7 @@ public:
         PDMenuItem *optionMenuItem = pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
 
         initCrankState();
+        initCrankState();
     }
 
     void update() {
@@ -49,6 +60,7 @@ public:
         pd->graphics->drawText("Klangwellen", strlen("Klangwellen"), kASCIIEncoding, x, y);
 
         handleCrank();
+        checkCrankEvents();
 
         x += dx;
         y += dy;
@@ -115,83 +127,19 @@ public:
         return 1;
     }
 
+    void handleCrankEvent(int eventIndex) {}
+
 private:
-    PlaydateAPI            *pd;
     std::string            fontpath;
     LCDFont                *font;
     int                    x, y, dx, dy;
     int                    audio_frame_counter   = 0;
     klangwellen::Wavetable fWavetable;
     char                   key_pressed_value[24] = {0};
-
-    int8_t           fBuffer[48000]{0};
-    klangwellen::SAM fSAM{fBuffer, 48000};
-    uint32_t         beat_counter      = 0;
-    float            fAccumulatedCrank = 0;
-    LCDBitmap        *flake;
-
-#define FULL_ROTATION 360.0f
-#define MAX_EVENTS 16
-
-    float totalRotation               = 0.0f; // Total cumulative rotation
-    float lastAngle                   = 0.0f;
-    bool  eventsTriggered[MAX_EVENTS] = {false};
-
-    void initCrankState() {
-        lastAngle     = pd->system->getCrankAngle();
-        totalRotation = 0.0f;
-        for (int i    = 0; i < MAX_EVENTS; ++i) {
-            eventsTriggered[i] = false;
-        }
-    }
-
-    void handleCrankEvent(int eventIndex) {
-        // Implement event handling logic here
-        pd->system->logToConsole("crank event: %i", eventIndex);
-    }
-
-    void checkCrankEvents() {
-        float currentAngle = pd->system->getCrankAngle();
-        float deltaAngle   = currentAngle - lastAngle;
-
-        // Adjust deltaAngle for wrapping (if crank crosses 0/360 boundary)
-        if (deltaAngle > 180.0f) deltaAngle -= FULL_ROTATION;
-        if (deltaAngle < -180.0f) deltaAngle += FULL_ROTATION;
-
-        totalRotation += deltaAngle;
-
-        float triggerAngle     = FULL_ROTATION / (float) MAX_EVENTS;
-        float absTotalRotation = fabs(totalRotation);
-
-        for (int i = 0; i < MAX_EVENTS; ++i) {
-            float eventAngle = triggerAngle * ((float) i + 1.0f);
-            if (!eventsTriggered[i] && absTotalRotation >= eventAngle) {
-                handleCrankEvent(i);
-                eventsTriggered[i] = true;
-            }
-
-            if (absTotalRotation >= FULL_ROTATION) {
-                eventsTriggered[i] = false;
-            }
-        }
-
-        // Reset total rotation after completing a full rotation
-        if (absTotalRotation >= FULL_ROTATION) {
-            totalRotation = fmodf(totalRotation, FULL_ROTATION);
-        }
-
-        lastAngle = currentAngle;
-    }
-
-    void handleCrank() {
-        float crank           = pd->system->getCrankChange();
-        char  crank_value[32] = {0};
-        fAccumulatedCrank += crank;
-        snprintf(crank_value, sizeof(crank_value), "crank change: %f", (double) crank);
-        pd->graphics->drawText(crank_value, strlen(crank_value), kASCIIEncoding, 1, 20);
-        snprintf(crank_value, sizeof(crank_value), "crank position: %i", (int) fAccumulatedCrank);
-        pd->graphics->drawText(crank_value, strlen(crank_value), kASCIIEncoding, 1, 30);
-    }
+    int8_t                 fBuffer[48000]{0};
+    klangwellen::SAM       fSAM{fBuffer, 48000};
+    uint32_t               beat_counter          = 0;
+    LCDBitmap              *flake;
 
     static void menuItemCallback(void *userdata) {
         auto *instance = static_cast<KlangwellenApp *>(userdata);
