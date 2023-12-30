@@ -38,6 +38,8 @@ public:
         PDMenuItem *checkMenuItem  = pd->system->addCheckmarkMenuItem("Item 2", 1, menuCheckmarkCallback, this);
         const char *options[]      = {"one", "two", "three"};
         PDMenuItem *optionMenuItem = pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
+
+        initCrankState();
     }
 
     void update() {
@@ -81,6 +83,8 @@ public:
             pd->system->logToConsole("UP");
             fSAM.speak(std::to_string(beat_counter++));
         }
+
+        checkCrankEvents();
     }
 
     void keyPressed(uint32_t key) {
@@ -125,6 +129,59 @@ private:
     uint32_t         beat_counter      = 0;
     float            fAccumulatedCrank = 0;
     LCDBitmap        *flake;
+
+#define FULL_ROTATION 360.0f
+#define MAX_EVENTS 16
+
+    float totalRotation               = 0.0f; // Total cumulative rotation
+    float lastAngle                   = 0.0f;
+    bool  eventsTriggered[MAX_EVENTS] = {false};
+
+    void initCrankState() {
+        lastAngle     = pd->system->getCrankAngle();
+        totalRotation = 0.0f;
+        for (int i    = 0; i < MAX_EVENTS; ++i) {
+            eventsTriggered[i] = false;
+        }
+    }
+
+    void handleCrankEvent(int eventIndex) {
+        // Implement event handling logic here
+        pd->system->logToConsole("crank event: %i", eventIndex);
+    }
+
+    void checkCrankEvents() {
+        float currentAngle = pd->system->getCrankAngle();
+        float deltaAngle   = currentAngle - lastAngle;
+
+        // Adjust deltaAngle for wrapping (if crank crosses 0/360 boundary)
+        if (deltaAngle > 180.0f) deltaAngle -= FULL_ROTATION;
+        if (deltaAngle < -180.0f) deltaAngle += FULL_ROTATION;
+
+        totalRotation += deltaAngle;
+
+        float triggerAngle     = FULL_ROTATION / (float) MAX_EVENTS;
+        float absTotalRotation = fabs(totalRotation);
+
+        for (int i = 0; i < MAX_EVENTS; ++i) {
+            float eventAngle = triggerAngle * ((float) i + 1.0f);
+            if (!eventsTriggered[i] && absTotalRotation >= eventAngle) {
+                handleCrankEvent(i);
+                eventsTriggered[i] = true;
+            }
+
+            if (absTotalRotation >= FULL_ROTATION) {
+                eventsTriggered[i] = false;
+            }
+        }
+
+        // Reset total rotation after completing a full rotation
+        if (absTotalRotation >= FULL_ROTATION) {
+            totalRotation = fmodf(totalRotation, FULL_ROTATION);
+        }
+
+        lastAngle = currentAngle;
+    }
 
     void handleCrank() {
         float crank           = pd->system->getCrankChange();
