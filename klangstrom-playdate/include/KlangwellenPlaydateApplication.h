@@ -1,12 +1,13 @@
 #pragma once
 
 #include <pd_api.h>
+#include <cstdio>
 
 #include "AudioState.h"
 
-class KlangwellenApp {
+class KlangwellenPlaydateApplication {
 public:
-    KlangwellenApp(PlaydateAPI *api) : pd(api) {}
+    explicit KlangwellenPlaydateApplication(PlaydateAPI *api) : pd(api) {}
 
     virtual void setup() = 0;
 
@@ -36,9 +37,12 @@ protected:
     void initCrankState() {
         lastAngle     = pd->system->getCrankAngle();
         totalRotation = 0.0f;
-        for (int i    = 0; i < MAX_EVENTS; ++i) {
-            eventsTriggered[i] = false;
+        for (bool &i: eventsTriggered) {
+            i = false;
         }
+//        for (int i    = 0; i < MAX_EVENTS; ++i) {
+//            eventsTriggered[i] = false;
+//        }
     }
 
     void checkCrankEvents() {

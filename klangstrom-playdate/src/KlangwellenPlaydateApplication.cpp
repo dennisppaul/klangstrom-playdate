@@ -1,21 +1,19 @@
-#include <memory>
-#include <string>
 #include <pd_api.h>
 #include <pdcpp/pdnewlib.h>
 
 #include "AudioState.h"
-#include "KlangwellenApp.h"
+#include "KlangwellenPlaydateApplication.h"
 
 // from https://github.com/nstbayless/playdate-cpp
 
-extern KlangwellenApp *get_instance(PlaydateAPI *pd);
+extern KlangwellenPlaydateApplication *get_instance(PlaydateAPI *pd);
 
-KlangwellenApp *fApp;
+KlangwellenPlaydateApplication *fApp;
 
 int update(void *userdata) {
     fApp->update();
     return 1;
-};
+}
 
 static int update_audio(void *context, int16_t *left, int16_t *right, int len) {
     // Do not use the audio callback for system tasks:
@@ -46,7 +44,7 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     if (event == kEventInit) {
 //        pd->system->logToConsole("init");
         pd->display->setRefreshRate(20);
-        fApp = get_instance(pd);//std::make_unique<KlangwellenApp>(pd);
+        fApp = get_instance(pd);//std::make_unique<KlangwellenPlaydateApplication>(pd);
         fApp->setup();
 
         /* setup callback, turn off lua */

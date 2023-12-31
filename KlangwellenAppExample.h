@@ -9,20 +9,24 @@
 
 #include "KlangWellen.h"
 #include "Wavetable.h"
-#include "KlangwellenApp.h"
+#include "KlangwellenPlaydateApplication.h"
 #include "AudioState.h"
 #include "SAM.h"
 
 using namespace klangwellen;
 
-class KlangwellenAppExample : public KlangwellenApp {
+class KlangwellenAppExample : public KlangwellenPlaydateApplication {
 public:
     int TEXT_WIDTH  = 86;
     int TEXT_HEIGHT = 16;
 
-    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenApp(api) {}
+    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenPlaydateApplication(api) {}
 
-    void setup() {
+    ~KlangwellenAppExample() {
+        // TODO cleanup
+    }
+
+    void setup() override {
         const char *err;
         fontpath = "/System/Fonts/Roobert-10-Bold.pft";
         font     = pd->graphics->loadFont(fontpath.c_str(), &err);
@@ -44,16 +48,15 @@ public:
 
         fSAM.speak("hello");
 
-        PDMenuItem *menuItem       = pd->system->addMenuItem("Item 1", menuItemCallback, this);
-        PDMenuItem *checkMenuItem  = pd->system->addCheckmarkMenuItem("Item 2", 1, menuCheckmarkCallback, this);
-        const char *options[]      = {"one", "two", "three"};
-        PDMenuItem *optionMenuItem = pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
+        pd->system->addMenuItem("Item 1", menuItemCallback, this);
+        pd->system->addCheckmarkMenuItem("Item 2", 1, menuCheckmarkCallback, this);
+        const char *options[] = {"one", "two", "three"};
+        pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
 
-        initCrankState();
         initCrankState();
     }
 
-    void update() {
+    void update() override {
         pd->graphics->clear(kColorWhite);
         pd->graphics->drawBitmap(flake, 1, 50, kBitmapUnflipped);
         pd->graphics->setFont(font);
@@ -99,15 +102,15 @@ public:
         checkCrankEvents();
     }
 
-    void keyPressed(uint32_t key) {
+    void keyPressed(uint32_t key) override {
         snprintf(key_pressed_value, 24, "key_pressed: %i", key);
         printf("key_pressed: %i\n", key); // prints to terminal ( not console ) if simulator is run from terminal
     }
 
-    void keyReleased(uint32_t key) {
+    void keyReleased(uint32_t key) override {
     }
 
-    int audioblock(AudioState *context, int16_t *left, int16_t *right, int len) {
+    int audioblock(AudioState *context, int16_t *left, int16_t *right, int len) override {
 
 //        char result[100] = {0};
 //        sprintf(result, "%i", len);
@@ -127,32 +130,32 @@ public:
         return 1;
     }
 
-    void handleCrankEvent(int eventIndex) {}
+    void handleCrankEvent(int eventIndex) override {}
 
 private:
     std::string            fontpath;
-    LCDFont                *font;
-    int                    x, y, dx, dy;
+    LCDFont                *font{};
+    int                    x{}, y{}, dx{}, dy{};
     int                    audio_frame_counter   = 0;
     klangwellen::Wavetable fWavetable;
     char                   key_pressed_value[24] = {0};
     int8_t                 fBuffer[48000]{0};
     klangwellen::SAM       fSAM{fBuffer, 48000};
     uint32_t               beat_counter          = 0;
-    LCDBitmap              *flake;
+    LCDBitmap              *flake{};
 
     static void menuItemCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenApp *>(userdata);
+        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu item callback ...");
     }
 
     static void menuCheckmarkCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenApp *>(userdata);
+        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu checkmark callback ...");
     }
 
     static void menuOptionsCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenApp *>(userdata);
+        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu options callback ...");
     }
 };
