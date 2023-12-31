@@ -22,7 +22,7 @@ static int update_audio(void *context, int16_t *left, int16_t *right, int len) {
     // Do not use the audio callback for system tasks:
     //   spend as little time here as possible
     if (fApp != nullptr) {
-        auto *state = (AudioState *) context;
+        auto *state = static_cast<AudioState *>(context);
         return fApp->audioblock(state, left, right, len);
     }
     return 0;
@@ -35,7 +35,7 @@ extern "C" {
 
 void setup_audio(PlaydateAPI *pd) {
     // create a new audio source with a state context
-    auto *state = (AudioState *) pd->system->realloc(nullptr, sizeof(AudioState));
+    auto *state   = static_cast<AudioState *>(pd->system->realloc(nullptr, sizeof(AudioState)));
     state->pd     = pd;
     state->source = pd->sound->addSource(&update_audio, state, 1);
 }

@@ -27,7 +27,8 @@ add_subdirectory(${KLANGSTROM_PLAYDATE_LIBRARY}/../submodules/klangwellen ${KLAN
 add_playdate_application(${PROJECT_NAME})
 
 # playdate library
-target_sources(${PROJECT_NAME} PUBLIC ${KLANGSTROM_PLAYDATE_LIBRARY}/src/KlangwellenPlaydateApplication.cpp)
+FILE(GLOB KP_SRC_FILES ${KLANGSTROM_PLAYDATE_LIBRARY}/src/*.cpp)
+target_sources(${PROJECT_NAME} PUBLIC ${KP_SRC_FILES})
 include_directories(${KLANGSTROM_PLAYDATE_LIBRARY}/include)
 
 # link library

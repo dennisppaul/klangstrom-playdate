@@ -1,12 +1,9 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <pd_api.h>
-#include <pdcpp/pdnewlib.h>
 
-#include <pd_api.h>
-
+#include "Crank.h"
 #include "KlangWellen.h"
 #include "Wavetable.h"
 #include "KlangwellenPlaydateApplication.h"
@@ -15,15 +12,13 @@
 
 using namespace klangwellen;
 
-class KlangwellenAppExample : public KlangwellenPlaydateApplication {
+class KlangwellenAppExample : public KlangwellenPlaydateApplication, CrankListener {
 public:
     int TEXT_WIDTH  = 86;
     int TEXT_HEIGHT = 16;
+    Crank crank{8};
 
-    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenPlaydateApplication(api) {}
-
-    ~KlangwellenAppExample() {
-        // TODO cleanup things here
+    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenPlaydateApplication(api) {
     }
 
     void setup() override {
@@ -35,7 +30,7 @@ public:
         }
 
         const char *path1 = "images/neven-patterns.png";
-        flake = pd->graphics->loadBitmap(path1, &err);
+        flake             = pd->graphics->loadBitmap(path1, &err);
 
         x  = ((400 - TEXT_WIDTH) / 2);
         y  = ((240 - TEXT_HEIGHT) / 2);
@@ -53,7 +48,7 @@ public:
         const char *options[] = {"one", "two", "three"};
         pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
 
-        initCrankState();
+        crank.init(pd->system->getCrankAngle());
     }
 
     void update() override {
@@ -62,8 +57,7 @@ public:
         pd->graphics->setFont(font);
         pd->graphics->drawText("Klangwellen", strlen("Klangwellen"), kASCIIEncoding, x, y);
 
-        handleCrank();
-        checkCrankEvents();
+        crank.update(pd->system->getCrankAngle());
 
         x += dx;
         y += dy;
@@ -98,8 +92,6 @@ public:
             pd->system->logToConsole("UP");
             fSAM.speak(std::to_string(beat_counter++));
         }
-
-        checkCrankEvents();
     }
 
     void keyPressed(uint32_t key) override {
@@ -111,10 +103,9 @@ public:
     }
 
     int audioblock(AudioState *context, int16_t *left, int16_t *right, int len) override {
-
-//        char result[100] = {0};
-//        sprintf(result, "%i", len);
-//        pd->graphics->drawText(result, strlen(result), kASCIIEncoding, 10, 10);
+        //        char result[100] = {0};
+        //        sprintf(result, "%i", len);
+        //        pd->graphics->drawText(result, strlen(result), kASCIIEncoding, 10, 10);
 
         float mSAMBuffer[len];
         fSAM.process(mSAMBuffer);
@@ -130,34 +121,37 @@ public:
         return 1;
     }
 
-    void finish() override {}
+    void finish() override {
+    }
 
-    void handleCrankEvent(int eventIndex) override {}
+    void crank_event(int event_id) override {
+        pd->system->logToConsole("crank: %i", event_id);
+    }
 
 private:
-    std::string            fontpath;
-    LCDFont                *font{};
-    int                    x{}, y{}, dx{}, dy{};
-    int                    audio_frame_counter   = 0;
+    std::string fontpath;
+    LCDFont *font{};
+    int x{}, y{}, dx{}, dy{};
+    int audio_frame_counter = 0;
     klangwellen::Wavetable fWavetable;
-    char                   key_pressed_value[24] = {0};
-    int8_t                 fBuffer[48000]{0};
-    klangwellen::SAM       fSAM{fBuffer, 48000};
-    uint32_t               beat_counter          = 0;
-    LCDBitmap              *flake{};
+    char key_pressed_value[24] = {0};
+    int8_t fBuffer[48000]{0};
+    klangwellen::SAM fSAM{fBuffer, 48000};
+    uint32_t beat_counter = 0;
+    LCDBitmap *flake{};
 
     static void menuItemCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
+        const auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu item callback ...");
     }
 
     static void menuCheckmarkCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
+        const auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu checkmark callback ...");
     }
 
     static void menuOptionsCallback(void *userdata) {
-        auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
+        const auto *instance = static_cast<KlangwellenPlaydateApplication *>(userdata);
         instance->pd->system->logToConsole("menu options callback ...");
     }
 };
