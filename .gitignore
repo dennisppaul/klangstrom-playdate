@@ -12,3 +12,7 @@ _deps
 cmake-build-debug
 .idea
 Source/pdex.dylib
+submodules/playdate-cpp/bin/
+submodules/playdate-cpp/bin/
+build-device
+build-simulator

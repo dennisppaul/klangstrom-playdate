@@ -23,7 +23,7 @@ public:
     explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenPlaydateApplication(api) {}
 
     ~KlangwellenAppExample() {
-        // TODO cleanup
+        // TODO cleanup things here
     }
 
     void setup() override {
@@ -129,6 +129,8 @@ public:
         audio_frame_counter++;
         return 1;
     }
+
+    void finish() override {}
 
     void handleCrankEvent(int eventIndex) override {}
 

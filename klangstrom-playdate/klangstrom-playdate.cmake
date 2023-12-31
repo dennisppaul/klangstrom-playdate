@@ -32,5 +32,5 @@ include_directories(${KLANGSTROM_PLAYDATE_LIBRARY}/include)
 
 # link library
 target_link_libraries(${PROJECT_NAME} pdcpp_core)
-modify_target_for_playdate(klangwellen_library)
+# modify_target_for_playdate(klangwellen_library)
 target_link_libraries(${PROJECT_NAME} klangwellen_library)

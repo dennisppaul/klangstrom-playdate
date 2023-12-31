@@ -11,15 +11,21 @@ extern KlangwellenPlaydateApplication *get_instance(PlaydateAPI *pd);
 KlangwellenPlaydateApplication *fApp;
 
 int update(void *userdata) {
-    fApp->update();
-    return 1;
+    if (fApp != nullptr) {
+        fApp->update();
+        return 1;
+    }
+    return 0;
 }
 
 static int update_audio(void *context, int16_t *left, int16_t *right, int len) {
     // Do not use the audio callback for system tasks:
     //   spend as little time here as possible
-    auto *state = (AudioState *) context;
-    return fApp->audioblock(state, left, right, len);
+    if (fApp != nullptr) {
+        auto *state = (AudioState *) context;
+        return fApp->audioblock(state, left, right, len);
+    }
+    return 0;
 }
 
 /* wrap `eventHandler` in `extern "C" { ... }` block */
@@ -42,30 +48,34 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     eventHandler_pdnewlib(pd, event, arg);
 
     if (event == kEventInit) {
-//        pd->system->logToConsole("init");
+        pd->system->logToConsole("setting up ...");
         pd->display->setRefreshRate(20);
-        fApp = get_instance(pd);//std::make_unique<KlangwellenPlaydateApplication>(pd);
-        fApp->setup();
-
-        /* setup callback, turn off lua */
-        pd->system->setUpdateCallback(update, pd);
-
-        setup_audio(pd);
+        if (fApp == nullptr) {
+            fApp = get_instance(pd);
+            fApp->setup();
+            /* setup callback, turn off lua */
+            pd->system->setUpdateCallback(update, pd);
+            setup_audio(pd);
+        }
     }
 
-    if (event == kEventKeyPressed) {
-        fApp->keyPressed(arg);
-//        pd->system->logToConsole("key pressed : %i", arg);
-    }
+    if (fApp != nullptr) {
+        if (event == kEventKeyPressed) {
+            fApp->keyPressed(arg);
+        }
 
-    if (event == kEventKeyReleased) {
-        fApp->keyReleased(arg);
-//        pd->system->logToConsole("key released: %i", arg);
-    }
+        if (event == kEventKeyReleased) {
+            fApp->keyReleased(arg);
+        }
 
-    if (event == kEventTerminate) {
-//        pd->system->logToConsole("shutting down...");
-        fApp = nullptr;
+        if (event == kEventTerminate) {
+            pd->system->logToConsole("shutting down ...");
+            fApp->finish();
+            fApp = nullptr;
+        }
+    } else {
+        pd->system->logToConsole("application is not intialized");
+        return 1;
     }
     return 0;
 }
