@@ -12,14 +12,11 @@
 
 using namespace klangwellen;
 
-class KlangwellenAppExample : public KlangwellenPlaydateApplication, CrankListener {
+class KlangwellenAppExample final : public KlangwellenPlaydateApplication, CrankListener {
 public:
     int TEXT_WIDTH  = 86;
     int TEXT_HEIGHT = 16;
     Crank crank{8};
-
-    explicit KlangwellenAppExample(PlaydateAPI *api) : KlangwellenPlaydateApplication(api) {
-    }
 
     void setup() override {
         const char *err;
@@ -48,15 +45,16 @@ public:
         const char *options[] = {"one", "two", "three"};
         pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
 
-        crank.init(pd->system->getCrankAngle());
         crank.set_listener(this);
+        crank.reset(pd->system->getCrankAngle());
     }
 
     void update() override {
         pd->graphics->clear(kColorWhite);
         pd->graphics->drawBitmap(flake, 1, 50, kBitmapUnflipped);
         pd->graphics->setFont(font);
-        pd->graphics->drawText("Klangwellen", strlen("Klangwellen"), kASCIIEncoding, x, y);
+        static const char *mText = "Klangwellen";
+        pd->graphics->drawText(mText, strlen(mText), kASCIIEncoding, x, y);
 
         crank.update(pd->system->getCrankAngle());
 
@@ -103,19 +101,20 @@ public:
     void keyReleased(uint32_t key) override {
     }
 
+    float *mSAMBuffer = new float[KLANG_SAMPLES_PER_AUDIO_BLOCK];
+
     int audioblock(AudioState *context, int16_t *left, int16_t *right, int len) override {
         //        char result[100] = {0};
         //        sprintf(result, "%i", len);
         //        pd->graphics->drawText(result, strlen(result), kASCIIEncoding, 10, 10);
 
-        float mSAMBuffer[len];
         fSAM.process(mSAMBuffer);
         for (int i = 0; i < len; i++) {
             float mSample = 0.0f;
             mSample += fWavetable.process();
             mSample += mSAMBuffer[i];
             mSample *= 0.5f;
-            left[i]  = (int16_t) (mSample * 32768);
+            left[i]  = static_cast<int16_t>(mSample * 32768);
             right[i] = left[i];
         }
         audio_frame_counter++;

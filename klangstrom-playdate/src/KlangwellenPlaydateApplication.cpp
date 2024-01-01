@@ -6,9 +6,11 @@
 
 // from https://github.com/nstbayless/playdate-cpp
 
-extern KlangwellenPlaydateApplication *get_instance(PlaydateAPI *pd);
+extern KlangwellenPlaydateApplication *get_instance();
 
-KlangwellenPlaydateApplication *fApp;
+static KlangwellenPlaydateApplication *fApp;
+static PlaydateAPI *fPD;
+static bool fAppIsInitialized = false;
 
 int update(void *userdata) {
     if (fApp != nullptr) {
@@ -21,11 +23,22 @@ int update(void *userdata) {
 static int update_audio(void *context, int16_t *left, int16_t *right, int len) {
     // Do not use the audio callback for system tasks:
     //   spend as little time here as possible
-    if (fApp != nullptr) {
-        auto *state = static_cast<AudioState *>(context);
-        return fApp->audioblock(state, left, right, len);
+    if (fPD == nullptr) {
+        return 0;
     }
-    return 0;
+    if (!fAppIsInitialized) {
+        fPD->system->logToConsole("app not intialized");
+        return 0;
+    }
+    if (KLANG_SAMPLES_PER_AUDIO_BLOCK != len) {
+        fPD->system->logToConsole("audio block size mismatch");
+        return 0;
+    }
+    if (fApp == nullptr) {
+        return 0;
+    }
+    auto *state = static_cast<AudioState *>(context);
+    return fApp->audioblock(state, left, right, len);
 }
 
 /* wrap `eventHandler` in `extern "C" { ... }` block */
@@ -48,14 +61,17 @@ int eventHandler(PlaydateAPI *pd, PDSystemEvent event, uint32_t arg) {
     eventHandler_pdnewlib(pd, event, arg);
 
     if (event == kEventInit) {
+        fPD = pd;
         pd->system->logToConsole("setting up ...");
-        pd->display->setRefreshRate(20);
+        pd->display->setRefreshRate(30);
         if (fApp == nullptr) {
-            fApp = get_instance(pd);
+            fApp = get_instance();
+            fApp->set_environment(pd);
+            setup_audio(pd);
             fApp->setup();
+            fAppIsInitialized = true;
             /* setup callback, turn off lua */
             pd->system->setUpdateCallback(update, pd);
-            setup_audio(pd);
         }
     }
 

@@ -3,6 +3,6 @@
 
 #include "KlangwellenAppExample.h"
 
-KlangwellenPlaydateApplication* get_instance(PlaydateAPI *pd) {
-    return new KlangwellenAppExample(pd);
+KlangwellenPlaydateApplication* get_instance() {
+    return new KlangwellenAppExample();
 }
