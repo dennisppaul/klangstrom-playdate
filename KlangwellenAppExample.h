@@ -49,6 +49,7 @@ public:
         pd->system->addOptionsMenuItem("Item 3", options, 3, menuOptionsCallback, this);
 
         crank.init(pd->system->getCrankAngle());
+        crank.set_listener(this);
     }
 
     void update() override {
@@ -124,7 +125,7 @@ public:
     void finish() override {
     }
 
-    void crank_event(int event_id) override {
+    void crank_event(int event_id, int direction) override {
         pd->system->logToConsole("crank: %i", event_id);
     }
 

@@ -6,7 +6,7 @@ class CrankListener {
 public:
     virtual ~CrankListener() = default;
 
-    virtual void crank_event(int event_id) = 0;
+    virtual void crank_event(int event_id, int direction) = 0;
 };
 
 class Crank {
@@ -50,14 +50,14 @@ public:
 
         totalRotation += deltaAngle;
 
-        float triggerAngle     = FULL_ROTATION / (float) fNumEventsPerRotation;
-        float absTotalRotation = fabs(totalRotation);
+        const float triggerAngle     = FULL_ROTATION / (float) fNumEventsPerRotation;
+        const float absTotalRotation = fabs(totalRotation);
 
         for (int i = 0; i < fNumEventsPerRotation; ++i) {
-            float eventAngle = triggerAngle * ((float) i + 1.0f);
+            const float eventAngle = triggerAngle * ((float) i + 1.0f);
             if (!fEventsTriggered[i] && absTotalRotation >= eventAngle) {
                 if (crankListener != nullptr) {
-                    crankListener->crank_event(i);
+                    crankListener->crank_event(i, deltaAngle > 0.0f ? 1 : -1);
                 }
                 fEventsTriggered[i] = true;
             }
@@ -85,6 +85,5 @@ private:
     float totalRotation                  = 0.0f; // Total cumulative rotation
     float lastAngle                      = 0.0f;
     bool *fEventsTriggered;
-    // bool eventsTriggered[fNumEventsPerRotation] = {false};
     CrankListener *crankListener = nullptr;
 };
